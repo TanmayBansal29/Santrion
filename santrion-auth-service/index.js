@@ -14,3 +14,11 @@ connectDB().then(() => {
 }).catch((err) => {
     console.error("Failed to connect to server", err)
 })
+
+// Default Route
+app.get("/", (req, res) => {
+    return res.json({
+        success: true,
+        message: "Server is up and running..."
+    })
+})
