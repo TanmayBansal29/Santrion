@@ -1,7 +1,6 @@
 // Importing required modules/packages
 const express = require("express")
 const connectDB = require("./src/config/db")
-require("dotenv").config()
 
 // Creating an instance for express
 const app = express()

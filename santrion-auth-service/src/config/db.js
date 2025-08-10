@@ -1,6 +1,6 @@
 // Importing required packagaes
 const mongoose = require("mongoose")
-require("dotenv").config()
+require("dotenv").config({silent:true})
 
 // Creating a function that helps in database connection
 const connectDB = async () => {
