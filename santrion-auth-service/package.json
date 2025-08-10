@@ -1,0 +1,31 @@
+{
+  "name": "santrion-auth-service",
+  "version": "1.0.0",
+  "description": "Auth Service for the Santrion Application",
+  "keywords": [
+    "healthcare",
+    "ai",
+    "innovation",
+    "startup"
+  ],
+  "homepage": "https://github.com/TanmayBansal29/Santrion#readme",
+  "bugs": {
+    "url": "https://github.com/TanmayBansal29/Santrion/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TanmayBansal29/Santrion.git"
+  },
+  "license": "ISC",
+  "author": "Tanmay Bansal",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.17.1"
+  }
+}
