@@ -146,7 +146,10 @@ const registerValidationSchema = joi.object({
         .messages({
             "any.only": "You must accept the privacy policy",
             "any.required": "You must accept the privacy policy"
-        })
+        }),
+    
+    // Domain is not expected from frontend
+    domain: joi.forbidden()
 })
 
 module.exports = {
