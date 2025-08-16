@@ -135,6 +135,14 @@ const userSchema = mongoose.Schema({
     accountLocked: {
         type: Boolean,
         default: false
+    },
+    isTermsandConditionsAccepted: {
+        type: Boolean,
+        required: true
+    },
+    isPrivacyPolicyAccepted: {
+        type: Boolean,
+        required: true
     }
 },
 {timestamps: true})
