@@ -48,6 +48,10 @@ const refreshTokenSchema = mongoose.Schema({
 },
 {timestamps: true})
 
+// TTL (Time to Live) Index
 refreshTokenSchema.index({expiresAt: 1}, {expiresAfterSeconds: 0})
+
+// Compound unique index
+refreshTokenSchema.index({userId: 1, deviceType: 1, sessionId: 1}, {unique: true})
 
 module.exports = mongoose.model("RefreshToken", refreshTokenSchema)
