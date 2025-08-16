@@ -2,27 +2,39 @@
 const nodemailer = require("nodemailer")
 require("dotenv").config()
 
+// Creating reusable transporter (created only once)
+const transporter = nodemailer.createTransport({
+    host: process.env.MAIL_HOST,
+    port: process.env.MAIL_PORT || 587,
+    secure: process.env.MAIL_SECURE === "true",
+    auth: {
+        user: process.env.MAIL_USER,
+        pass: process.env.MAIL_PASS
+    }
+})
+
+/**
+ * Mailer Utility
+ * @param {string} email - Recipient email address
+ * @param {string} subject - Email subject line
+ * @param {string} html - Email HTML body
+ */
+
 // Created a mailer util that takes email, title, body
 const mailer = async (email, title, body) => {
     try {
-        // Created a transporter having the attributes host, auth.user, auth.pass
-        let transporter = nodemailer.createTransport({
-            host: process.env.MAIL_HOST,
-            port: 587,
-            secure: false,
-            auth: {
-                user: process.env.MAIL_USER,
-                pass: process.env.MAIL_PASS
-            }
-        })
-
         // On the transporter implied the send mail method
         let info = await transporter.sendMail({
-            from: 'Santrion || Connecting Care With Intelligence <no-reply@santrion.com>',
+            from: process.env.MAIL_FROM,
             to: email,
             subject: title,
             html: body
         })
+
+        if (process.env.NODE_ENV !== "Production") {
+            console.log("Email Sent: ", info.messageId)
+        }
+        
         return {success: true, info}
     } catch (error) {
         // Logging the Error
