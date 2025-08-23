@@ -105,30 +105,30 @@ const registerValidationSchema = joi.object({
             "any.required": "Gender is required"
         }),
     address: joi.object({
-        street: joi.string().max(100).required().messages({
+        streetAddress: joi.string().max(100).required().messages({
             "string.max": "Street address must be at most 100 characters",
             "string.empty": "Street address is required",
             "any.required": "Street address is required"
         }),
-        city: joi.string().max(50).required().messages({
+        cityName: joi.string().max(50).required().messages({
             "string.max": "City must be at most 50 characters",
             "string.empty": "City is required",
             "any.required": "City is required"
         }),
-        state: joi.string().max(50).required().messages({
+        stateName: joi.string().max(50).required().messages({
             "string.max": "State must be at most 50 characters",
             "string.empty": "State is required",
             "any.required": "State is required"
         }),
-        zipCode: joi.string().pattern(/^\d{5}(-\d{4})?$/).required().messages({
-            "string.pattern.base": "Please provide a valid ZIP code",
-            "string.empty": "ZIP code is required",
-            "any.required": "ZIP code is required"
-        }),
-        country: joi.string().max(50).required().messages({
+        countryName: joi.string().max(50).required().messages({
             "string.max": "Country must be at most 50 characters",
             "string.empty": "Country is required",
             "any.required": "Country is required"
+        }),
+        pinCode: joi.string().pattern(/^\d{5}(-\d{4})?$/).required().messages({
+            "string.pattern.base": "Please provide a valid ZIP code",
+            "string.empty": "ZIP code is required",
+            "any.required": "ZIP code is required"
         })
     }).required().messages({
         "any.required": "Address is required"

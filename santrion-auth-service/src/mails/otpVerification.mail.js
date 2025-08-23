@@ -73,7 +73,7 @@ const otpVerification = (otp) => {
             <div class="message">OTP Verification Email</div>
             <div class="body">
                 <p>Dear User,</p>
-                <p>Thank you for registering with Huvano. To complete your registration, please use the following OTP
+                <p>Thank you for registering with Santrion. To complete your registration, please use the following OTP
                     (One Time Password) to verify your account:</p>
                 <h2 class="highlight">${otp}</h2>
                 <p>The OTP is valid for 5 minutes. If you did not request this verification, Please discard this email
