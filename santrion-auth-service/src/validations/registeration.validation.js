@@ -41,6 +41,16 @@ const registerValidationSchema = joi.object({
             "string.max": "Last Name must be at most 50 characters",
             "any.required": "Last name is required"
         }),
+    username: joi.string()
+        .min(3)
+        .max(30)
+        .pattern(/^[a-zA-Z0-9_]+$/)
+        .required()
+        .trim()
+        .messages({
+            "string.empty": "Username is required",
+            "any.required": "Email is required"
+        }),
     email: joi.string()
         .email()
         .required()
