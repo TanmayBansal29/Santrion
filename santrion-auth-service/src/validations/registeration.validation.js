@@ -73,7 +73,7 @@ const registerValidationSchema = joi.object({
     password: joi.string()
         .min(8)
         .max(128)
-        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,128}$/)
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/)
         .required()
         .messages({
             "string.min": "Password must be at least 8 characters long",
@@ -135,7 +135,7 @@ const registerValidationSchema = joi.object({
             "string.empty": "Country is required",
             "any.required": "Country is required"
         }),
-        pinCode: joi.string().pattern(/^\d{5}(-\d{4})?$/).required().messages({
+        pinCode: joi.string().required().messages({
             "string.pattern.base": "Please provide a valid ZIP code",
             "string.empty": "ZIP code is required",
             "any.required": "ZIP code is required"

@@ -12,8 +12,10 @@ const redisClient = createClient({
     }
 })
 
-// Error Handler
+// Event Handler
 redisClient.on("error", (err) => console.log("Redis Client Error: ", err))
+redisClient.on("connect", () => console.log("Redis Client connecting..."));
+redisClient.on("ready", () => console.log("Redis Client ready ✅"));
 
 // Connect once server starts
 (

@@ -4,12 +4,13 @@ const { sendOtp, verifyOtp } = require("../utils/otp.utils")
 // Controller for Sending OTP
 exports.sendOTP = async (req, res) => {
     try {
-        const { email, purpose, channel = "email" } = req.body
+        const { purpose } = req.params
+        const { email, channel = "email" } = req.body
 
-        if(!email || !purpose) {
+        if(!email) {
             return res.status(400).json({
                 success: false,
-                message: "Email and purpose are required"
+                message: "Email is required"
             })
         }
 
@@ -39,7 +40,8 @@ exports.sendOTP = async (req, res) => {
 
 exports.verifyOTP = async (req, res) => {
     try {
-        const {email, otp, purpose} = req.body
+        const {purpose} = req.params
+        const {email, otp} = req.body
         if(!email || !otp || !purpose) {
             return res.status(400).json({
                 success: false,

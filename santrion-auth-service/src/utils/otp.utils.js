@@ -15,7 +15,7 @@ function generateOTP() {
 }
 
 // Logic for sending the otp
-exports.sendOtp = async (email, purpose, channel, req) => {
+exports.sendOtp = async ({email, purpose, channel, ipAddress, userAgent}) => {
     const key = `otp:${purpose}:${email}`
     const otp = generateOTP()
 
@@ -29,10 +29,10 @@ exports.sendOtp = async (email, purpose, channel, req) => {
     }
 
     // Save OTP in Redis
-    await redisClient.setEx(key, OTP_EXPIRY, otp)
+    await redisClient.setEx(key, OTP_EXPIRY, String(otp));
 
     // Track resend count separately
-    await redisClient.setEx(resendKey, OTP_EXPIRY, resendCount + 1)
+    await redisClient.setEx(resendKey, 3600, String(resendCount + 1))
 
     // Save log in Mongo
     await OtpModel.create({
@@ -40,8 +40,8 @@ exports.sendOtp = async (email, purpose, channel, req) => {
         purpose,
         channel,
         expiresAt: new Date(Date.now() + OTP_EXPIRY * 1000),
-        ipAddress: req.ip,
-        userAgent: req.headers["user-agent"],
+        ipAddress: ipAddress || "unknown",
+        userAgent: userAgent || "unknown",
         resendCount: resendCount + 1
     })
 
@@ -54,20 +54,22 @@ exports.sendOtp = async (email, purpose, channel, req) => {
 }
 
 // Logic for verifying the otp
-exports.verifyOtp = async (email, purpose, otpInput) => {
+exports.verifyOtp = async ({email, purpose, otp}) => {
     const key = `otp:${purpose}:${email}`
-    const otp = await redisClient.get(key)
+    const storedOtp = await redisClient.get(key)
+    console.log("Checking Redis for key:", key, "Got:", otp);
+    console.log("Stored OTP:", storedOtp, "Input OTP:", otp);
 
     if(!otp) {
         throw new Error("OTP expired or not found")
     }
 
     // If otp entered not correct
-    if(otp != otpInput) {
+    if(String(storedOtp) != String(otp)) {
         // Update attemptCount in Mongo
         await OtpModel.findOneAndUpdate(
             {email, purpose},
-            {$in: {attemptCount: 1}, status: "failed"},
+            {$inc: {attemptCount: 1}, status: "failed"},
             {sort: {createdAt: -1}}
         );
         throw new Error("Invalid OTP")
@@ -81,7 +83,7 @@ exports.verifyOtp = async (email, purpose, otpInput) => {
     )
 
     // Delete OTP from Redis
-    await redisClient.default(key)
+    await redisClient.del(key)
 
     return true
 }

@@ -3,8 +3,9 @@ const express = require("express")
 const connectDB = require("./src/config/db")
 const cookieParser = require("cookie-parser")
 const authenticationRoutes = require("./src/routes/auth.route")
-const otpRoutes = require("./src/routes/auth.route")
+const otpRoutes = require("./src/routes/otp.route")
 const cors = require("cors")
+require("./src/utils/redisClient.utils");
 
 // Creating an instance for express
 const app = express()
