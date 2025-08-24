@@ -1,7 +1,7 @@
 const joi = require("joi")
 
 // Role to Domain Mapping - backend will use it to set domain automatically
-export const roleDomainMap = {
+const roleDomainMap = {
     Patient: "Healthcare",
     Doctor: "Healthcare",
     Nurse: "Healthcare",
