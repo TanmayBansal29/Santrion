@@ -1,9 +1,23 @@
 // Importing required modules/packages
 const express = require("express")
 const connectDB = require("./src/config/db")
+const cookieParser = require("cookie-parser")
+const authenticationRoutes = require("./src/routes/auth.route")
+const otpRoutes = require("./src/routes/auth.route")
+const cors = require("cors")
 
 // Creating an instance for express
 const app = express()
+
+// Middlewares
+app.use(express.json())
+app.use(cookieParser())
+app.use(
+    cors({
+        origin: "http://localhost:4000",
+        credentials: true
+    })
+)
 
 // Creating connection to database
 connectDB().then(() => {
@@ -14,6 +28,10 @@ connectDB().then(() => {
 }).catch((err) => {
     console.error("Failed to connect to server", err)
 })
+
+// Registering the routes
+app.use("/api/v1/auth", authenticationRoutes)
+app.use("/api/v1/otp", otpRoutes)
 
 // Default Route
 app.get("/", (req, res) => {
