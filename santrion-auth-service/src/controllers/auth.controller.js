@@ -1,3 +1,4 @@
+const OtpModel = require("../models/Otp.model")
 const UserProfile = require("../models/User.model")
 const {registerValidationSchema, roleDomainMap} = require("../validations/registeration.validation")
 
@@ -56,6 +57,46 @@ exports.signup = async (req, res) => {
 
         // Hashing the password
         const hashedPassword = await bcrypt.hash(password, 10)
+
+        // Checking whether email is otp verified
+        const latestOTP = await OtpModel.findOne({email, purpose: "registration"}).sort({createdAt: -1})
+        if(!latestOTP || latestOTP.status !== "verified"){
+            return res.status(400).json({
+                success: false,
+                message: "Please verify your email with OTP first"
+            })
+        }
+
+        const user = await UserProfile.create({
+            firstName,
+            middleName,
+            lastName,
+            username,
+            email,
+            phone,
+            password: hashedPassword,
+            role,
+            domain,
+            dateOfBirth,
+            gender,
+            address,
+            termsAccepted,
+            privacyPolicyAccepted
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "User Registered Successfully",
+            data: {
+                id: user._id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                domain: user.domain
+            }
+        })
 
     } catch (error) {
         return res.status(500).json({
