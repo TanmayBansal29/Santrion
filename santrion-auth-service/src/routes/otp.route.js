@@ -9,7 +9,7 @@ router.post("/send-otp/registration", (req, res) => {
     sendOTP(req, res)
 })
 
-router.post("verify-email/registration", (req, res) => {
+router.post("/verify-email/registration", (req, res) => {
     req.body.purpose = "registration"
     verifyOTP(req, res)
 })

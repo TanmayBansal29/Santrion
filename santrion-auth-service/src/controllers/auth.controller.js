@@ -67,6 +67,14 @@ exports.signup = async (req, res) => {
             })
         }
 
+        // verifying the accepted terms and privacy policy
+        if(!termsAccepted || !privacyPolicyAccepted){
+            return res.status(400).json({
+                success: false,
+                message: "You must accept Terms & Conditions and Privacy Policy"
+            })
+        }
+
         const user = await UserProfile.create({
             firstName,
             middleName,
