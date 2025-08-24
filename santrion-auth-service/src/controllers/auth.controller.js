@@ -54,8 +54,6 @@ exports.signup = async (req, res) => {
             }
         }
 
-        
-
         // Hashing the password
         const hashedPassword = await bcrypt.hash(password, 10)
 

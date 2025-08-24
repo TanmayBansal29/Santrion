@@ -88,4 +88,5 @@ otpSchema.post("save", async function (doc, next) {
     }
 })
 
-module.exports = mongoose.model("Otp", otpSchema)
+const OtpModel = mongoose.model("Otp", otpSchema)
+module.exports = OtpModel
