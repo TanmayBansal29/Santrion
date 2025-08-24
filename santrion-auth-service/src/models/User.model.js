@@ -48,8 +48,7 @@ const userSchema = mongoose.Schema({
     gender: {
         type: String,
         required: true,
-        enum: ["Male", "Female", "Other"],
-        default: "Other"
+        enum: ['male', 'female', 'other', 'prefer_not_to_say']
     },
     dateOfBirth: {
         type: Date,
@@ -77,7 +76,7 @@ const userSchema = mongoose.Schema({
             required: true,
             trim: true
         },
-        pincode: {
+        pinCode: {
             type: String,
             required: true,
             trim: true
@@ -91,20 +90,12 @@ const userSchema = mongoose.Schema({
     role: {
         type: String,
         required: true,
-        enum: ['Patient',
-        'Doctor',
-        'Pathologist',
-        'Pharmacist',
-        'Nurse',
-        'Admin',
-        'Fitness Trainer',
-        'Dietician',
-        'Nutritionist']
+        enum: ['patient', 'doctor', 'pharmacist', 'pathologist', 'nurse', 'admin', 'fitnesstrainer', 'dietician', 'nutritionist']
     },
     domain: {
         type: String,
         required: true,
-        enum: ['HealthCare', 'Fitness']
+        enum: ['healthCare', 'fitness']
     },
     // ------------- Verification & Security -------------
     resetToken: {
@@ -136,11 +127,11 @@ const userSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
-    isTermsandConditionsAccepted: {
+    termsAccepted: {
         type: Boolean,
         required: true
     },
-    isPrivacyPolicyAccepted: {
+    privacyPolicyAccepted: {
         type: Boolean,
         required: true
     }

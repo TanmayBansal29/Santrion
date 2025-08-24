@@ -2,15 +2,15 @@ const joi = require("joi")
 
 // Role to Domain Mapping - backend will use it to set domain automatically
 const roleDomainMap = {
-    Patient: "Healthcare",
-    Doctor: "Healthcare",
-    Nurse: "Healthcare",
-    Pathologist: "Healthcare",
-    Pharmacist: "Healthcare",
-    Admin: "Healthcare",
-    FitnessTrainer: "Fitness",
-    Dietician: "Fitness",
-    Nutritionist: "Fitness"
+    patient: "healthcare",
+    doctor: "healthcare",
+    nurse: "healthcare",
+    pathologist: "healthcare",
+    pharmacist: "healthcare",
+    admin: "healthcare",
+    fitnesstrainer: "fitness",
+    dietician: "fitness",
+    nutritionist: "fitness"
 }
 
 // Registration Validation Schema

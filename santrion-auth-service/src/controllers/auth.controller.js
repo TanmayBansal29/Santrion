@@ -1,5 +1,6 @@
 const OtpModel = require("../models/Otp.model")
 const UserProfile = require("../models/User.model")
+const bcrypt = require("bcrypt")
 const {registerValidationSchema, roleDomainMap} = require("../validations/registeration.validation")
 
 // Signup controller
@@ -23,12 +24,12 @@ exports.signup = async (req, res) => {
         } = value
 
         // Role -> Domain Mapping
-        const domain = roleDomainMap[role.charAt(0).toUpperCase() + role.slice(1)]
-        if(!domain) {
+        const domain = roleDomainMap[role.toLowerCase()];
+        if (!domain) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid Role Domain Mapping"
-            })
+            });
         }
 
         // Check for duplicate email/password
@@ -75,6 +76,8 @@ exports.signup = async (req, res) => {
             })
         }
 
+        console.log("Domain: ", domain)
+        console.log("Domain Enum Values:", roleDomainMap);
         const user = await UserProfile.create({
             firstName,
             middleName,
@@ -92,6 +95,8 @@ exports.signup = async (req, res) => {
             privacyPolicyAccepted
         })
 
+        console.log("Domain Enum Values:", UserSchema.path("domain").enumValues);
+
         return res.status(200).json({
             success: true,
             message: "User Registered Successfully",
@@ -107,9 +112,11 @@ exports.signup = async (req, res) => {
         })
 
     } catch (error) {
+        console.error("Error Registering User: ", error)
         return res.status(500).json({
             success: false,
-            message: "User cannot be registered. Please try again later"
+            message: "User cannot be registered. Please try again later",
+            error: error.message
         })
     }
 }
