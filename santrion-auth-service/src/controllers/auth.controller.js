@@ -221,3 +221,13 @@ exports.login = async(req, res) => {
         })
     }
 }
+
+// Logout Controller
+exports.logout = async (req, res) => {
+    // using clearCookie method to clear the cookie and log out
+    res.clearCookie("token")
+    return res.status(200).json({
+        success: true,
+        message: "Logged Out Successfully"
+    })
+}
