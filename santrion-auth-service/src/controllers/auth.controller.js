@@ -76,8 +76,6 @@ exports.signup = async (req, res) => {
             })
         }
 
-        console.log("Domain: ", domain)
-        console.log("Domain Enum Values:", roleDomainMap);
         const user = await UserProfile.create({
             firstName,
             middleName,
@@ -94,8 +92,6 @@ exports.signup = async (req, res) => {
             termsAccepted,
             privacyPolicyAccepted
         })
-
-        console.log("Domain Enum Values:", UserSchema.path("domain").enumValues);
 
         return res.status(200).json({
             success: true,
@@ -120,3 +116,5 @@ exports.signup = async (req, res) => {
         })
     }
 }
+
+// Login Controller

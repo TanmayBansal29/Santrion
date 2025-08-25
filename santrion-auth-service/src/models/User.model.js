@@ -104,10 +104,6 @@ const userSchema = mongoose.Schema({
     resetDate: {
         type: Date
     },
-    isEmailVerified: {
-        type: Boolean,
-        default: false
-    },
     isSubscribed: {
         type: Boolean,
         default: false
