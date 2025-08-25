@@ -224,10 +224,22 @@ exports.login = async(req, res) => {
 
 // Logout Controller
 exports.logout = async (req, res) => {
-    // using clearCookie method to clear the cookie and log out
-    res.clearCookie("token")
-    return res.status(200).json({
-        success: true,
-        message: "Logged Out Successfully"
-    })
+    try {
+        //const userId = req.user?.id
+        //const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken
+
+        // Clear cookies
+        res.clearCookie("token")
+        return res.status(200).json({
+            success: true,
+            message: "Logged out successfully"
+        })
+
+    } catch (error) {
+        console.log("Error during logout: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Logout failed. Please try again"
+        })
+    }
 }
