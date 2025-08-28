@@ -147,3 +147,37 @@ exports.logout = async (req, res) => {
 /**
  * Logout Controller: from all devices
  */
+
+exports.logoutAllDevices = async (req, res) => {
+    try {
+        if(!req.user || !req.user.id){
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized Request"
+            })
+        }
+
+        // Revoke all active refresh tokens for this user
+        await RefreshToken.updateMany(
+            {userId: req.user.id, isRevoked: false},
+            {isRevoked: true, revokedAt: new Date(), revokedByIp: req.ip}
+        )
+
+        // Clear cookies for current device
+        res.clearCookie("token", { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production" });
+        res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production" });
+
+        return res.status(200).json({
+            success: true,
+            message: "Logged out from all devices successfully"
+        })
+    } catch (error) {
+        console.error("Error during Logging out from all devices: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Logout from all devices failed. Please try again"
+        });
+    }
+}
+
+
