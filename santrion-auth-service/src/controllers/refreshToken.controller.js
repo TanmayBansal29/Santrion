@@ -213,3 +213,52 @@ exports.getAllSessions = async (req, res) => {
         })
     }
 }
+
+/**
+ * Logout from a specific device (by SessionId)
+ */
+
+exports.logoutSpecificDevice = async (req, res) => {
+    try {
+        const {sessionId} = req.body
+        if(!req.user || !req.user.id){
+            return res.status(401).json({
+                success: false,
+                message: "unauthorized Access"
+            })
+        }
+
+        if(!sessionId){
+            return res.status(400).json({
+                success: false,
+                message: "sessionId is required"
+            })
+        }
+
+        // Find the session and mark as resolved
+        const session = await RefreshToken.findOneAndUpdate(
+            {userId: req.user.id, sessionId, isRevoked: false},
+            {isRevoked: true, revokedAt: new Date(), revokedByIp: req.ip},
+            {new: true}
+        )
+
+        if(!session){
+            return res.status(404).json({
+                success: false,
+                message: "Session not found or already revoked"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Device Logged out successfully",
+            sessionId
+        })
+    } catch (error) {
+        console.log("Error logging out specific device: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Failed to logout from the device"
+        })
+    }
+}
