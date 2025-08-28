@@ -100,3 +100,44 @@ exports.refreshAccessToken = async (req, res) => {
         })
     }
 }
+
+/**
+ * Logout Controller
+ */
+exports.logout = async (req, res) => {
+    try {
+        // Looking for the refreshToken
+        const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken
+        if(!refreshToken) {
+            return res.status(400).json({
+                success: false,
+                message: "Refresh token is required to logout"
+            })
+        }
+
+        // Hash the incoming token for DB lookup (to match stored hash)
+        const hashedToken = crypto.createHash("sha256").update(refreshToken).digest("hex")
+
+        // Mark this refresh token as revoked
+        await RefreshToken.findOneAndUpdate(
+            {tokenHash: hashedToken, userId: req.user.id, isRevoked: false},
+            { isRevoked: true, revokedAt: new Date(), revokedByIp: req.ip },
+            { new: true}
+        )
+
+        // clear cookies
+        res.clearCookie("token")
+        res.clearCookie("refreshToken")
+
+        return res.json(200).json({
+            success: true,
+            message: "Logged out successfully"
+        })
+    } catch (error) {
+        console.log("Error during logout: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Logout failed. Please try again"
+        })
+    }
+}
