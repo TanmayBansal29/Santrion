@@ -39,11 +39,27 @@ const refreshTokenSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    revokedAt: {
+        type: Date
+    },
+    createByIp: {
+        type: String
+    },
     lastUsedAt: {
         type: Date
     },
+    refreshCount: {
+        type: Number,
+        default: 0
+    },
     location: {
         type: String
+    },
+    deviceName: {
+        type: String
+    },
+    fingerprint: {
+        ype: String
     }
 },
 {timestamps: true})
@@ -54,4 +70,5 @@ refreshTokenSchema.index({expiresAt: 1}, {expiresAfterSeconds: 0})
 // Compound unique index
 refreshTokenSchema.index({userId: 1, deviceType: 1, sessionId: 1}, {unique: true})
 
-module.exports = mongoose.model("RefreshToken", refreshTokenSchema)
+const RefreshToken = mongoose.model("RefreshToken", refreshTokenSchema)
+module.exports = RefreshToken
