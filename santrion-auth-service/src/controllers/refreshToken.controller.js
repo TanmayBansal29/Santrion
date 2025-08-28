@@ -180,4 +180,36 @@ exports.logoutAllDevices = async (req, res) => {
     }
 }
 
+/**
+ * Get all active sessions for the logged-in user
+ */
 
+exports.getAllSessions = async (req, res) => {
+    try {
+        if(!req.user || !req.user.id){
+            return res.status(401).json({
+                success: false,
+                message: "unauthorized Access"
+            })
+        }
+
+        // Find all active sessions
+        const sessions = await RefreshToken.find({
+            userId: req.user.id,
+            isRevoked: false,
+            expiresAt: {$gt: new Date()}
+        }).select("-tokenHash -__v") // don’t return token hash for security
+
+        return res.status(200).json({
+            success: true,
+            count: sessions.length,
+            sessions
+        })
+    } catch (error) {
+        console.error("Error while fetching all sessions IDs: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Failed to fetch active sessions"
+        })
+    }
+}
