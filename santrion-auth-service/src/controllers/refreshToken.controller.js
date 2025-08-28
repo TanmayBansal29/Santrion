@@ -115,21 +115,23 @@ exports.logout = async (req, res) => {
             })
         }
 
-        // Hash the incoming token for DB lookup (to match stored hash)
-        const hashedToken = crypto.createHash("sha256").update(refreshToken).digest("hex")
+        if(refreshToken){
+            // Hash the incoming token for DB lookup (to match stored hash)
+            const hashedToken = crypto.createHash("sha256").update(refreshToken).digest("hex")
 
-        // Mark this refresh token as revoked
-        await RefreshToken.findOneAndUpdate(
+            // Mark this refresh token as revoked
+            await RefreshToken.findOneAndUpdate(
             {tokenHash: hashedToken, userId: req.user.id, isRevoked: false},
             { isRevoked: true, revokedAt: new Date(), revokedByIp: req.ip },
             { new: true}
-        )
+            )
+        }
 
         // clear cookies
-        res.clearCookie("token")
-        res.clearCookie("refreshToken")
+        res.clearCookie("token", { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production" })
+        res.clearCookie("refreshToken", { httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production" })
 
-        return res.json(200).json({
+        return res.status(200).json({
             success: true,
             message: "Logged out successfully"
         })
@@ -141,3 +143,7 @@ exports.logout = async (req, res) => {
         })
     }
 }
+
+/**
+ * Logout Controller: from all devices
+ */
