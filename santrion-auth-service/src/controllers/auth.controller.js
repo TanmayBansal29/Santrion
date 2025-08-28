@@ -3,6 +3,7 @@ const UserProfile = require("../models/User.model")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const {registerValidationSchema, roleDomainMap} = require("../validations/registeration.validation")
+const RefreshToken = require("../models/refreshToken.model")
 
 // Signup controller
 exports.signup = async (req, res) => {
@@ -191,24 +192,50 @@ exports.login = async(req, res) => {
         await user.save();
 
         // Generate JWT
-        const token = jwt.sign(
+        const accessToken = jwt.sign(
             {username: user.username, id:user._id, role: user.role},
             process.env.JWT_SECRET,
-            { expiresIn: "24h"}
+            { expiresIn: "15m"} // Short expiry
         );
 
+        // Generate Refresh token (long lived, stored in DB hashed)
+        const refreshTokenPlain = crypto.randomBytes(64).toString("hex")
+        const refreshTokenHash = crypto.createHash("sha256").update(refreshTokenPlain).digest("hex")
+
+        // Store refresh token in DB
+        const refreshTokenDoc = new RefreshToken({
+            userId: user._id,
+            tokenHash: refreshTokenHash,
+            deviceType: req.device?.type || "other",
+            ipAddress: req.ip,
+            userAgent: req.headers["user-agent"],
+            sessionId: crypto.randomUUID(),
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
+        })
+        await refreshTokenDoc.save()
+
         // Set Cookie for token and return success response
-        const options = {
-            expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        const accessTokenOptions = {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict"
         };
 
+        const refreshTokenOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            expires: refreshTokenDoc.expiresAt
+        }
+
         const {password: _, failedLoginAttempts, lockUntil, isLocked, ...safeUser} = user.toObject();
-        res.cookie("token", token, options).status(200).json({
+        res.cookie("token", token, options)
+        .cookie("refreshToken", refreshTokenPlain, refreshTokenOptions)
+        .status(200)
+        .json({
             success: true,
-            token,
+            token: accessToken,
+            refreshToken: refreshTokenPlain,
             data: safeUser,
             message: "Login Successful"
         });
