@@ -4,6 +4,9 @@ const bcrypt = require("bcrypt")
 const UserProfile = require("../models/User.model")
 const ResetToken = require("../models/resetToken.model")
 const RefreshToken = require("../models/refreshToken.model")
+const mailer = require("../utils/mailer.utils")
+const forgotPasswordTemplate = require("../mails/forgotPassword.mail")
+const passwordUpdateSuccess = require("../mails/passwordUpdated.mail")
 
 // Forgot password controller
 exports.forgotPassword = async(req, res) => {
@@ -63,9 +66,12 @@ exports.forgotPassword = async(req, res) => {
         })
 
         // Sending email
-        //
-        //
-        //
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`
+        await mailer(
+            user.email,
+            "Reset Password Link || Santrionn",
+            forgotPasswordTemplate(resetUrl, user.username)
+        )
 
         return res.status(200).json({
             success: true,
@@ -146,9 +152,11 @@ exports.resetPassword = async (req, res) => {
         )
 
         // Send Confirmation email
-        //
-        //
-        //
+        await mailer(
+            user.email,
+            "Password Updated Successfully || Santrionn",
+            passwordUpdateSuccess()
+        )
 
         return res.status(200).json({
             success: true,
@@ -225,15 +233,17 @@ exports.updatePassword = async (req, res) => {
         )
 
         // Send email - notify
-        //
-        //
-        //
+        await mailer(
+            user.email,
+            "Password Updated Successfully || Santrionn",
+            passwordUpdateSuccess()
+        )
 
         return res.status(200).json({
             success: true,
             message: "Password Updated Successfully"
         })
-        
+
     } catch (error) {
         console.log("Error Updating password: ", error)
         return res.status(500).json({
