@@ -162,3 +162,83 @@ exports.resetPassword = async (req, res) => {
         })
     }
 }
+
+// Update Password Controller (Requires Authentication)
+exports.updatePassword = async (req, res) => {
+    try {
+        // getting the current password and new password from user
+        const {currentPassword, newPassword} = req.body
+
+        // Checking if all fields are entered
+        if(!currentPassword || !newPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Please enter all the fields"
+            })
+        }
+
+        // Enforce Strong password policy
+        const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
+        if(!passwordPolicy.test(newPassword)){
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 8 chars, include uppercase, lowercase, number, and special character"
+            })
+        }
+
+        const user = await UserProfile.findById(req.user.id)
+        if(!user){
+            return res.status(400).json({
+                success: false,
+                message: "User not found"
+            })
+        }
+
+        // Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password)
+        if(!isMatch){
+            return res.status(400).json({
+                success: false,
+                message: "Current password is incorrect"
+            })
+        }
+
+        // Check if new password is same as old
+        const isSame = await bcrypt.compare(newPassword, user.password)
+        if(isSame){
+            return res.status(400).json({
+                success: false,
+                message: ""
+            })
+        }
+
+        // Update user password
+        const hashedPassword = await bcrypt.hash(newPassword, 10)
+        user.password = hashedPassword
+        user.lastPasswordChangeAt = new Date();
+        await user.save()
+
+        // Revoke all refresh tokens for this user (force logout everywhere)
+        await RefreshToken.updateMany(
+            {userId: user._id, isRevoked: false},
+            {isRevoked: true, revokedAt: new Date(), revokedBy: "User"}
+        )
+
+        // Send email - notify
+        //
+        //
+        //
+
+        return res.status(200).json({
+            success: true,
+            message: "Password Updated Successfully"
+        })
+        
+    } catch (error) {
+        console.log("Error Updating password: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong updating the password"
+        })
+    }
+}
