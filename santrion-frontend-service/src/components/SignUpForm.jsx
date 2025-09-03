@@ -32,7 +32,7 @@ import { User, Calendar, Truck, Heart, Eye, EyeOff } from 'lucide-react';
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      alert('Account created successfully! (Demo)');
+     
     }, 1500);
   };
 
@@ -285,7 +285,7 @@ import { User, Calendar, Truck, Heart, Eye, EyeOff } from 'lucide-react';
               {isLoading ? (
                 <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                'CREATE ACCOUNT'
+                'Next'
               )}
             </button>
 

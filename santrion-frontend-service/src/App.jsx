@@ -6,10 +6,10 @@ function App() {
 
   return (
     <>
-  {/* <SignUpForm/>*/}
+  {/* <SignUpForm/> */}
 
-  {/* <SignUpForm2/> */}
-  <LoginPage/>
+  <SignUpForm2/>
+  {/* <LoginPage/> */}
   </>
   )
 }
