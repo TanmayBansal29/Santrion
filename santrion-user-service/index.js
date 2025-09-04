@@ -2,7 +2,7 @@
 const cookieParser = require("cookie-parser")
 const express = require("express")
 const cors = require("cors")
-const connectDB = require("./config/db")
+const connectDB = require("./src/config/db")
 require("dotenv").config()
 
 // Creating instance of Express
