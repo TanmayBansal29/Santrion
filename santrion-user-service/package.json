@@ -1,0 +1,31 @@
+{
+  "name": "santrion-user-service",
+  "version": "1.0.0",
+  "description": "User service connected with auth using REST",
+  "keywords": [
+    "UserServivce",
+    "MicrosrviceArchitecture"
+  ],
+  "homepage": "https://github.com/TanmayBansal29/Santrion#readme",
+  "bugs": {
+    "url": "https://github.com/TanmayBansal29/Santrion/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TanmayBansal29/Santrion.git"
+  },
+  "license": "ISC",
+  "author": "Tanmay Bansal",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "mongoose": "^8.18.0",
+    "nodemon": "^3.1.10"
+  }
+}
