@@ -1,7 +1,7 @@
 // Importing required packages
 const mongoose = require("mongoose")
 
-// Schema for extended user schema
+// Schema for extended user
 const userProfileSchema = mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
