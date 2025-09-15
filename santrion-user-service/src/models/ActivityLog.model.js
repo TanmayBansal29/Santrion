@@ -46,8 +46,7 @@ const ActivityLogSchema = mongoose.Schema({
         enum: ["info", "warning", "critical"],
         default: "info"
     }
-},
-{timestamps: true}
+}, {timestamps: true}
 )
 
 const ActivityLog = mongoose.model("ActivityLog", ActivityLogSchema)
