@@ -6,6 +6,7 @@ const userProfileSchema = mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        unique: true,
         required: true
     },
     gender: {
@@ -15,16 +16,23 @@ const userProfileSchema = mongoose.Schema({
     },
     dateOfBirth: {
         type: Date,
-        required: true
+        required: true,
+        validate: {
+            validator: function(value) {
+                const today = new Date()
+                return value < today // must be in past
+            },
+            message: "Date of Birth must be in past"
+        }
     },
     profileImageUrl: {
-        type: String
+        type: String,
+        default: ""
     },
     bio: {
         type: String,
         maxlength: 250,
-        trim: true,
-        required: false
+        trim: true
     },
     maritalStatus: {
         type: String,
@@ -63,7 +71,21 @@ const userProfileSchema = mongoose.Schema({
         }
     },
     emergencyContact: {
-        type: String
+        name: {
+            type: String,
+            trim: true,
+            maxlength: 50
+        },
+        phone: {
+            type: String,
+            trim: true,
+            validate: {
+                validator: function (v) {
+                    return /^[0-9]{7,15}$/.test(v); // basic phone validation
+                },
+                message: props => `${props.value} is not a valid phone number`
+            }
+        }
     }
 }, {timestamps: true})
 
