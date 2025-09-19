@@ -33,3 +33,6 @@ const DocumentsSchema = mongoose.Schema({
         default: true
     }
 }, {timestamps: true})
+
+const GeneralDocuments = mongoose.model("GeneralDocuments", DocumentsSchema)
+module.exports = GeneralDocuments
