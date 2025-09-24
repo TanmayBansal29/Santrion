@@ -136,3 +136,47 @@ exports.getProfile = async (req, res) => {
         })
     }
 }
+
+// Controller to get user profile by Id (Admin)
+exports.getProfileById = async (req, res) => {
+    try {
+        // Ensuring only admins can use this
+        if(req.user.role != "admin"){
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Only admins can fetch profiles by ID"
+            })
+        }
+
+        const targetUserID = req.params.id
+        const profile = await UserProfileExtended.findOne({userId: targetUserID}).populate("userId", "email username role")
+
+        if(!profile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found"
+            })
+        }
+
+        // Log Admin Activity
+        await ActivityLog.create({
+            userId: req.user.id, // admin performing actions
+            type: "Admin",
+            description: `Admin fetched profile of ${targetUserID}`,
+            ipAddress: req.ip,
+            deviceInfo: req.headers["user-agent"]
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile fetched successfully",
+            data: profile
+        })
+    } catch (error) {
+        console.error("Error while fetching the profile by ID: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong fetching the profile by ID"
+        })
+    }
+}
