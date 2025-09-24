@@ -97,7 +97,8 @@ exports.createProfile = async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: "User Profile Created successfully"
+            message: "User Profile Created successfully",
+            data: profile
         })
 
     } catch (error) {
@@ -105,6 +106,33 @@ exports.createProfile = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Something went wrong creating profile"
+        })
+    }
+}
+
+// Get User Profile Controller
+exports.getProfile = async (req, res) => {
+    try {
+        const userId = req.user.id // Extracted from auth middleware
+        const profile = await UserProfileExtended.findOne({userId}).populate("userId", "email username role")
+
+        if(!profile){
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found"
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile fetched successfully",
+            data: profile
+        })
+    } catch (error) {
+        console.error("Error while fetching the profile: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong fetching the profile"
         })
     }
 }
