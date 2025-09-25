@@ -6,7 +6,7 @@ const UserProfileExtended = require("../models/UserProfile.model")
 exports.createProfile = async (req, res) => {
     try {
         const userId = req.user.id  // Extracted from auth middleware
-        const {gender, dateOfBirth, profileImageUrl, bio, martialStatus, address, emergencyContact} = req.body
+        const {gender, dateOfBirth, profileImageUrl, bio, maritalStatus, address, emergencyContact} = req.body
 
         // Validate required fields manually
         if(!gender || !dateOfBirth || !address) {
@@ -36,7 +36,7 @@ exports.createProfile = async (req, res) => {
 
         // validate marital status
         const validateMarital = ['Married', 'Unmarried']
-        if(!validateMarital.includes(martialStatus)){
+        if(!validateMarital.includes(maritalStatus)){
             return res.status(400).json({
                 success: false,
                 message: "Invalid Marital Status"
@@ -79,7 +79,7 @@ exports.createProfile = async (req, res) => {
             dateOfBirth,
             profileImageUrl: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
             bio,
-            martialStatus,
+            maritalStatus,
             address,
             emergencyContact
         })
@@ -177,6 +177,72 @@ exports.getProfileById = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Something went wrong fetching the profile by ID"
+        })
+    }
+}
+
+// Controller to get all the profiles (admin)
+exports.getAllProfiles = async (req, res) => {
+    try {
+        // Ensuring only admins can use this
+        if(req.user.role != "admin"){
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Only admins can fetch profiles by ID"
+            })
+        }
+
+        // Pagination
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        const skip = (page - 1) * limit
+
+        // Filtering
+        const filters = {}
+        if(req.query.gender) filters.gender = req.query.gender
+        if(req.query.maritalStatus) filters.maritalStatus = req.query.maritalStatus
+        if(req.query.cityName) filters["address.cityName"] = req.query.cityName
+        if(req.query.stateName) filters["address.StateName"] = req.query.stateName
+
+        // Sorting
+        const sortBy = req.query.sortBy || "CreatedAt"
+        const order = req.query.order === "asc" ? 1 : -1
+
+        // Query
+        const profiles = await UserProfileExtended.find(filters)
+        .populate("userId", "email username role")
+        .sort({ [sortBy]: order })
+        .skip(skip)
+        .limit(limit)
+
+        const totalProfiles = await UserProfileExtended.countDocuments(filters)
+
+        // Log Admin action
+        await ActivityLog.create({
+            userId: req.user.id,
+            type: "Admin",
+            description: `Admin fetched all the profiles (page: ${page}, limit: ${limit})`,
+            ipAddress: req.ip,
+            deviceInfo: req.headers["user-agent"]
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile fetched successfully",
+            pagination: {
+                total: totalProfiles,
+                page,
+                limit,
+                totalPages: Math.ceil(totalProfiles/limit)
+            },
+            data: profiles
+        })
+
+    } catch (error) {
+        console.log("Error while fetching all the profiles: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong fetching all the profiles"
         })
     }
 }
