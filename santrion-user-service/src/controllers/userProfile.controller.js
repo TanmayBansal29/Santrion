@@ -246,3 +246,70 @@ exports.getAllProfiles = async (req, res) => {
         })
     }
 }
+
+// Controller to update the profile
+exports.updateProfile = async (req, res) => {
+    try {
+        const userId = req.user.id // Extracted from auth middleware
+
+        // Restricting fields that can be updated
+        const allowedUpdates = [
+            "bio",
+            "maritalStatus",
+            "gender",
+            "address",
+            "emergencyContact",
+            "dateOfBirth"
+        ]
+
+        const filteredUpdates = {} 
+        for (const key of Object.keys(updates)) {
+            if (allowedUpdates.includes(key)) {
+                filteredUpdates[key] = updates[key];
+            }
+        }
+
+        if(Object.keys(filteredUpdates).length == 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No valid  fields provided for update"
+            })
+        }
+
+        // Update profile
+        const profile = await UserProfileExtended.findOneAndUpdate(
+            {userId},
+            {$set: filteredUpdates},
+            {new: true, runValidators: true}
+        )
+
+        if(!profile){
+            return res.status(400).json({
+                success: false,
+                message: "User Profile not found"
+            })
+        }
+
+        // Log user action
+        await ActivityLog.create({
+            userId,
+            type: "Profile Update",
+            description: "User updated their profile",
+            ipAddress: req.ip,
+            deviceInfo: req.headers["user-agent"]
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "User profile updated Successfully",
+            data: profile
+        })
+        
+    } catch (error) {
+        console.log("Error while updating the profile: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong updating the profile",
+        })
+    }
+}
