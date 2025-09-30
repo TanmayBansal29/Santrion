@@ -1,5 +1,6 @@
 const ActivityLog = require("../models/ActivityLog.model")
 const UserProfileExtended = require("../models/UserProfile.model")
+const { uploadFile } = require("../services/cloudinaryService")
 
 
 // Create User Profile Controller
@@ -304,12 +305,66 @@ exports.updateProfile = async (req, res) => {
             message: "User profile updated Successfully",
             data: profile
         })
-        
+
     } catch (error) {
         console.log("Error while updating the profile: ", error)
         return res.status(500).json({
             success: false,
             message: "Something went wrong updating the profile",
+        })
+    }
+}
+
+// Controller to update the profile image
+exports.updateProfileImage = async(req, res) => {
+    try {
+        const userId = req.user.id // Extracted from auth middleware
+
+        // Ensure file exists
+        if(!req.file){
+            return res.status(400).json({
+                success: false,
+                message: "No image file uploaded"
+            })
+        }
+
+        // Upload to cloudinary
+        const uploadedImage = await uploadFile(req.file.path, "profile_images")
+
+        // Update user profile
+        const profile = await UserProfileExtended.findOneAndUpdate(
+            {userId},
+            {profileImageUrl: uploadedImage.url},
+            {new: true}
+        )
+
+        if(!profile){
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found. Please create a profile first"
+            })
+        }
+
+        // Log Activity
+        await ActivityLog.create({
+            userId,
+            type: "Profile Update",
+            description: "User updated successfully",
+            ipAddress: req.ip,
+            deviceInfo: rwq.headers["user-agent"]
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile image updated successfully",
+            data: profile
+        })
+
+    } catch (error){
+        console.error("Error while updating the profile image: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while updating the profile image"
         })
     }
 }
