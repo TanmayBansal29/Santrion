@@ -248,3 +248,34 @@ exports.login = async(req, res) => {
         })
     }
 }
+
+// Controller to deactivate the account
+exports.deactivateAccount = async (req, res) => {
+    try {
+        const userId = req.user.id // Extracted from auth middleware
+        const user = await UserProfile.findById(userId)
+
+        if(!user){
+            return res.status(404).json({
+                success: false,
+                message: "User profile not found"
+            })
+        }
+
+        // Mark account as inactive
+        user.isActive = false
+        await user.save()
+
+        return res.status(200).json({
+            success: true,
+            message: "Account deactivated successfully"
+        })
+        
+    } catch (error) {
+        console.error("Error while deactivating account: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while deactivating the account"
+        })
+    }
+}
