@@ -29,6 +29,10 @@ const userProfileSchema = mongoose.Schema({
         type: String,
         default: ""
     },
+    profileImagePublicId: {
+        type: String,
+        default: ""
+    },
     bio: {
         type: String,
         maxlength: 250,
@@ -86,6 +90,10 @@ const userProfileSchema = mongoose.Schema({
                 message: props => `${props.value} is not a valid phone number`
             }
         }
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
 }, {timestamps: true})
 
