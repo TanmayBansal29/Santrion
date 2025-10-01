@@ -1,6 +1,7 @@
 const ActivityLog = require("../models/ActivityLog.model")
 const UserProfileExtended = require("../models/UserProfile.model")
 const { uploadFile, deleteFile } = require("../services/cloudinaryService")
+const axios = require("axios")
 
 
 // Create User Profile Controller
@@ -374,7 +375,11 @@ exports.updateProfileImage = async(req, res) => {
 exports.deleteProfile = async (req, res) => {
     try {
         const userId = req.user.id // Extracted from auth middleware
-        const profile = await UserProfileExtended.findOne({userId})
+        const profile = await UserProfileExtended.findOneAndUpdate(
+            {userId, isDeleted: false},
+            {isDeleted: true},
+            {new: true}
+        )
 
         if(!profile) {
             return res.status(404).json({
@@ -392,9 +397,21 @@ exports.deleteProfile = async (req, res) => {
             }
         }
 
-        // Soft deleting the profile
-        profile.isDeleted = true
-        await profile.save()
+        // Call auth service for deactivation
+        try {
+            await axios.patch(
+                `${process.env.AUTH_SERVICE_URL}/api/v1/auth/deactivate`,
+                {userId},
+                {headers: {Authorization: req.headers.authorization}} // pass token
+            )
+        } catch (authError){
+            console.error("Auth service deactivation error: ", authError.message)
+            // rollback profile delete if needed
+            return res.status(500).json({
+                success: false,
+                message: "Profile marked deleted but account deactivation failed"
+            })
+        }
 
         // Log activity
         await ActivityLog.create({
@@ -407,9 +424,9 @@ exports.deleteProfile = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: "Profile Deleted Successfully"
+            message: "Profile Deleted and deactivated Successfully"
         })
-        
+
     } catch (error) {
         console.error("Error while deleting profile: ", error)
         return res.status(500).json({
