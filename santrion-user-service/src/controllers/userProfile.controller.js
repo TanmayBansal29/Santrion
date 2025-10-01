@@ -1,6 +1,6 @@
 const ActivityLog = require("../models/ActivityLog.model")
 const UserProfileExtended = require("../models/UserProfile.model")
-const { uploadFile } = require("../services/cloudinaryService")
+const { uploadFile, deleteFile } = require("../services/cloudinaryService")
 
 
 // Create User Profile Controller
@@ -335,6 +335,7 @@ exports.updateProfileImage = async(req, res) => {
         const profile = await UserProfileExtended.findOneAndUpdate(
             {userId},
             {profileImageUrl: uploadedImage.url},
+            {profileImagePublicId: uploadedImage.public_id},
             {new: true}
         )
 
@@ -365,6 +366,55 @@ exports.updateProfileImage = async(req, res) => {
         return res.status(500).json({
             success: false,
             message: "Something went wrong while updating the profile image"
+        })
+    }
+}
+
+// Controllers to soft delete the profile
+exports.deleteProfile = async (req, res) => {
+    try {
+        const userId = req.user.id // Extracted from auth middleware
+        const profile = await UserProfileExtended.findOne({userId})
+
+        if(!profile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found"
+            })
+        }
+
+        // If profile has an image in Cloudinary, delete it
+        if(profile.profileImagePublicId){
+            try{
+                await deleteFile(profile.profileImagePublicId)
+            } catch (err) {
+                console.warn("Cloudinary Cleanup Failed: ", err.message)
+            }
+        }
+
+        // Soft deleting the profile
+        profile.isDeleted = true
+        await profile.save()
+
+        // Log activity
+        await ActivityLog.create({
+            userId,
+            type: "PROFILE_DELETED",
+            description: "User deleted their profile",
+            ipAddress: req.ip,
+            deviceInfo: req.headers['user-agent']
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile Deleted Successfully"
+        })
+        
+    } catch (error) {
+        console.error("Error while deleting profile: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while deleting the profile"
         })
     }
 }
