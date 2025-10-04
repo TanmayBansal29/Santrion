@@ -435,3 +435,61 @@ exports.deleteProfile = async (req, res) => {
         })
     }
 }
+
+// Controller to delete (soft delete) user profile by Id (Admin)
+exports.deleteProfileAdmin = async (req, res) => {
+    try {
+        // Ensuring only admins can use this
+        if(req.user.role != "admin"){
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Only admins can delete profile"
+            })
+        }
+
+        const targetUserID = req.params.id
+        const profile = await UserProfileExtended.findOneAndUpdate(
+            {userId: targetUserID, isDeleted: false},
+            {isDeleted: true},
+            {new: true}
+        )
+
+        if(!profile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found"
+            })
+        }
+
+        // If profile has an image in Cloudinary, delete it
+        if(profile.profileImagePublicId){
+            try{
+                await deleteFile(profile.profileImagePublicId)
+            } catch (err) {
+                console.warn("Cloudinary Cleanup Failed: ", err.message)
+            }
+        }
+
+        // Logging Activity
+        await ActivityLog.create({
+            userId: targetUserID,
+            type: "ADMIN_DELETE_PROFILE",
+            description: `Profile soft deleted by admin ${req.user.id}`,
+            ipAddress: req.ip,
+            deviceInfo: req.headers['user-agent']
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile soft deleted successfully",
+            data: profile
+        })
+
+    } catch (error) {
+        console.error("Error while deleting the profile: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong deleting the profile"
+        })
+    }
+}
