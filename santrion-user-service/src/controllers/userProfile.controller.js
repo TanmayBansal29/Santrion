@@ -264,7 +264,8 @@ exports.updateProfile = async (req, res) => {
             "dateOfBirth"
         ]
 
-        const filteredUpdates = {} 
+        const filteredUpdates = {}
+        const updates = req.body
         for (const key of Object.keys(updates)) {
             if (allowedUpdates.includes(key)) {
                 filteredUpdates[key] = updates[key];
@@ -490,6 +491,80 @@ exports.deleteProfileAdmin = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Something went wrong deleting the profile"
+        })
+    }
+}
+
+// Controller to update a user profile (admin)
+exports.UpdateProfileAdmin = async (req, res) => {
+    try {
+        // Ensuring only admins can use this
+        if(req.user.role != "admin"){
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Only admins can update the profile"
+            })
+        }
+
+        // Restricting fields that can be updated
+        const allowedUpdates = [
+            "bio",
+            "maritalStatus",
+            "gender",
+            "address",
+            "emergencyContact",
+            "dateOfBirth"
+        ]
+
+        const filteredUpdates = {}
+        const updates = req.body
+        for (const key of Object.keys(updates)) {
+            if (allowedUpdates.includes(key)) {
+                filteredUpdates[key] = updates[key];
+            }
+        }
+
+        if(Object.keys(filteredUpdates).length == 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No valid  fields provided for update"
+            })
+        }
+
+        const targetUserID = req.params.id
+        const profile = await UserProfileExtended.findOneAndUpdate(
+            {userId: targetUserID},
+            {$set: filteredUpdates},
+            {new: true, runValidators: true}
+        )
+
+        if(!profile) {
+            return res.status(404).json({
+                success: false,
+                message: "Profile not found"
+            })
+        }
+
+        // Log user action
+        await ActivityLog.create({
+            userId: req.user.id,
+            type: "ADMIN_PROFILE_UPDATE",
+            description: `Admin ${req.user.id} updated profile of user ${targetUserID}`,
+            ipAddress: req.ip,
+            deviceInfo: req.headers['user-agent']
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Profile updated successfully",
+            data: profile
+        })
+
+    } catch (error){
+        console.error("Error while updating the user profile: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong updating the profile"
         })
     }
 }
