@@ -154,3 +154,73 @@ exports.withdrawConsent = async (req, res) => {
         })
     }
 }
+
+// Controller to get all the consents (Admin Side)
+exports.getAllConsents = async (req, res) => {
+    try {
+        // Ensuring only admins can use this
+        if(req.user.role !== "admin"){
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Only Admins can access all the consents"
+            })
+        }
+
+        // Pagination
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        const skip = (page - 1) * limit
+
+        // Filtering
+        const filters = {}
+        if(req.query.consentType) filters.consentType = req.query.consentType
+        if(req.query.status) filters.status = req.query.status
+        if (req.query.givenAt) {
+            filters.givenAt = { $gte: new Date(req.query.givenAt) };
+        }
+        if (req.query.revokedAt) {
+            filters.revokedAt = { $gte: new Date(req.query.revokedAt) };
+        }
+
+        // Sorting
+        const sortBy = req.query.sortBy || "createdAt"
+        const order = req.query.order === "asc" ? 1 : -1
+
+        // Query
+        const consents = await Consent.find(filters)
+        .populate("userId", "_id email username role")
+        .sort({ [sortBy]: order })
+        .skip(skip)
+        .limit(limit)
+
+        const totalConsents = await Consent.countDocuments(filters)
+
+        // Log admin action
+        await ActivityLog.create({
+            userId: req.user.id,
+            type: "Admin",
+            description: `Admin fetched all the consents (page: ${page}, limit: ${limit})`,
+            ipAddress: req.ip,
+            deviceInfo: req.headers["user-agent"]
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Consents fetched successfully",
+            pagination: {
+                total: totalConsents,
+                page,
+                limit,
+                totalPages: Math.ceil(totalConsents/limit)
+            },
+            data: consents
+        })
+
+    } catch (error) {
+        console.error("Error while getting all the consents: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong getting all the consents"
+        })
+    }
+}
