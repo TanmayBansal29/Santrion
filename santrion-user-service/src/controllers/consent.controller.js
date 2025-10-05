@@ -224,3 +224,58 @@ exports.getAllConsents = async (req, res) => {
         })
     }
 }
+
+
+// Controller to get consent by user
+exports.getUserConsent = async (req, res) => {
+    try {
+        // Ensuring only admins can use this
+        if(req.user.role !== "admin"){
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Only admins can access this"
+            })
+        }
+
+        // Fetch all the consents for targeted user
+        const targetedId = req.params.id
+        const consents = await Consent.find({userId: targetedId})
+        .sort({ createdAt: -1 })
+        .populate("userId", "_id email username role");
+
+        if(!consents || consents.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: "No consents found for this user",
+                data: []
+            })
+        }
+
+        // Compute latest status per consent type
+        const latestStatus = {};
+        for(const consent of consents) {
+            if(!latestStatus[consent.consentType]) {
+                latestStatus[consent.consentType] = {
+                    status: consent.status,
+                    updatedAt: consent.updatedAt
+                }
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "User consents fetched successfully",
+            data: {
+                history: consents, // full audit trail
+                latest: latestStatus // compact view
+            }
+        })
+
+    } catch (error) {
+        console.error("Error while getting user consent: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while getting user consent"
+        })
+    }
+}
