@@ -125,11 +125,16 @@ exports.withdrawConsent = async (req, res) => {
             })
         }
 
-        // Update status to revoked
-        consent.status = "revoked"
-        consent.revokedAt = new Date()
-
-        await consent.save()
+        // create a new revoked consent entry for audit trail
+        const revokedConsent = await Consent.create({
+            userId,
+            consentType: consent.consentType,
+            status: "revoked",
+            collectedBy: "user",
+            notes: `Revoked by User ${req.user.id}`,
+            givenAt: consent.givenAt, // keep original grant reference
+            revokedAt: new Date()
+        });
 
         // Logging the activity
         await ActivityLog.create({
@@ -143,7 +148,12 @@ exports.withdrawConsent = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: "Consent withdrawn successfully",
-            data: consent
+            data: {
+                consentId: revokedConsent._id,
+                consentType: revokedConsent.consentType,
+                status: revokedConsent.status,
+                revokedAt: revokedConsent.revokedAt
+            }
         })
 
     } catch (error) {
@@ -276,6 +286,74 @@ exports.getUserConsent = async (req, res) => {
         return res.status(500).json({
             success: false,
             message: "Something went wrong while getting user consent"
+        })
+    }
+}
+
+// Controller to revoke the user consent (Admin)
+exports.withdrawUserConsent = async (req, res) => {
+    try {
+        // Ensuring only admins can use this
+        if(req.user.role !== "admin") {
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: only admins can use this"
+            })
+        }
+
+        const targetedId = req.params.id
+        const consentId = req.params.consentId
+
+        // Find the consent that belongs to targeted user
+        const consent = await Consent.findOne({
+            _id: consentId,
+            userId: targetedId,
+            status: "granted"
+        })
+
+        if(!consent){
+            return res.status(404).json({
+                success: false,
+                message: "Consent not found or already withdrawn"
+            })
+        }
+
+        // create a new revoked consent entry for audit trail
+        const revokedConsent = await Consent.create({
+            userId: targetUserId,
+            consentType: consent.consentType,
+            status: "revoked",
+            collectedBy: "admin",
+            notes: `Revoked by Admin ${req.user.id}`,
+            givenAt: consent.givenAt, // keep original grant reference
+            revokedAt: new Date()
+        });
+
+        // Logging the Activity
+        await ActivityLog.create({
+            userId: req.user.id,
+            type: "ADMIN_WITHDRAW_CONSENT",
+            description: `Admin ${req.user.id} withdrew ${consent.consentType} for user ${targetUserId}`,
+            ipAddress: req.ip,
+            deviceInfo: req.headers["user-agent"]
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Consent withdrawn successfully",
+            data: {
+                consentId: revokedConsent._id,
+                consentType: revokedConsent.consentType,
+                status: revokedConsent.status,
+                revokedAt: revokedConsent.revokedAt
+            }
+        })
+
+    } catch (error) {
+        console.error("Error while withdrawing user consent: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while withdrawing user consent"
         })
     }
 }
