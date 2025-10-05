@@ -84,4 +84,4 @@ consentSchema.pre("save", async function (next) {
 consentSchema.index({userId: 1, consentType: 1, createdAt: -1})
 
 const Consent = mongoose.model("Consent", consentSchema)
-module.exports = Consent
+module.exports = {Consent, CONSENT_TYPES}
