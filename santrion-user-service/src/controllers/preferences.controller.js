@@ -135,3 +135,54 @@ exports.updatePreferences = async (req, res) => {
         })
     }
 }
+
+// Controller to reset preferences to default
+exports.resetPreferences = async (req, res) => {
+    try {
+        const userId = req.user.id // Extract from auth middleware
+
+        const defaultPreferences = {
+            language: "en",
+            timeZone: "Asia/Kolkata",
+            theme: "System",
+            notificationSettings: {
+                emailSettings: true,
+                smsSettings: true,
+                pushNotifications: true
+            },
+            privacySettings: {
+                shareProfileWithDoctors: false,
+                shareDataForResearch: false,
+                allowMarketingEmails: false
+            }
+        }
+
+        // Update or create preferences
+        const preferences = await Preferences.findOneAndUpdate(
+            {userId},
+            {$set: defaultPreferences},
+            {new: true, upsert: true} // upsert ensures creation if missing
+        )
+
+        // Log Activity
+        await ActivityLog.create({
+            userId,
+            type: "RESET_PREFERENCES",
+            description: "User reset the preferences",
+            ipAddress: req.ip,
+            deviceInfo: req.headers['user-agent']
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Preferences reset successfully",
+            data: preferences
+        })
+    } catch (error) {
+        console.error("Error while resetting the preferences: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while resetting the preferences"
+        })
+    }
+}
