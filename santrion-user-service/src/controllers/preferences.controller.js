@@ -231,3 +231,68 @@ exports.getUserPreferences = async (req, res) => {
         })
     }
 }
+
+// Controller to get all user preferences
+exports.getAllPreferences = async (req, res) => {
+    try {
+        // Ensuring only admins can use this
+        if(req.user.role !== "admin"){
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Only admins can be access this"
+            })
+        }
+
+        // Pagination
+        const page = parseInt(req.query.page) || 1
+        const limit = parseInt(req.query.limit) || 10
+        const skip = (page - 1) * limit
+
+        // Filtering
+        const filters = {}
+        if(req.query.language) filters.language = req.query.language
+        if(req.query.timeZone) filters.timeZone = req.query.timeZone
+        if(req.query.theme) filters.theme = req.query.theme
+
+        // Sorting
+        const sortBy = req.query.sortBy || "createdAt"
+        const order = req.query.order === "asc" ? 1 : -1
+
+        // Query
+        const preferences = await Preferences.find(filters)
+        .populate("userId", "email username role")
+        .sort({ [sortBy]: order })
+        .skip(skip)
+        .limit(limit)
+
+        const totalPreferences = await Preferences.countDocuments(filters)
+
+        // Log Admin actions
+        await ActivityLog.create({
+            userId: req.user.id,
+            type: "ADMIN_FETCHED_PREFERENCES",
+            description: `Admin fetched all the preferences (page: ${page}, limit: ${limit})`,
+            ipAddress: req.ip,
+            deviceInfo: req.headers["user-agent"]
+        })
+
+        return res.status(200).json({
+            success: true,
+            message: "Preferences fetched successfully",
+            pagination: {
+                total: totalPreferences,
+                page,
+                limit,
+                totalPages: Math.ceil(totalPreferences/limit)
+            },
+            data: preferences
+        })
+
+    } catch (error) {
+        console.error("Error while getting all the preferences: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while getting all the preferences"
+        })
+    }
+}
