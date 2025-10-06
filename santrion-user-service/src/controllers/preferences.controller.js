@@ -186,3 +186,48 @@ exports.resetPreferences = async (req, res) => {
         })
     }
 }
+
+// Controller to get preferences for any user (Admin)
+exports.getUserPreferences = async (req, res) => {
+    try {
+        // Ensuring only admins can use this
+        if(req.user.role !== "admin"){
+            return res.status(403).json({
+                success: false,
+                message: "Forbidden: Only admins can access this"
+            })
+        }
+
+        const targetedId = req.params.userId
+        let preferences = await Preferences.findOne({userId: targetedId})
+
+        if(!preferences) {
+            preferences = await Preferences.create({userId: targetedId})
+
+            try {
+                await ActivityLog.create({
+                    userId: req.user.id,
+                    type: "CREATE_PREFERENCES",
+                    description: "Default preferences created",
+                    ipAddress: req.ip,
+                    deviceInfo: req.headers['user-agent']
+                })
+            } catch (error) {
+                console.error("Error while logging the activity: ", error)
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: `Preferences fetched successfully for user ${targetedId}`,
+            data: preferences
+        })
+
+    } catch (error) {
+        console.error("Error while getting user preferences: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while getting user preferences"
+        })
+    }
+}
