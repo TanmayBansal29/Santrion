@@ -392,3 +392,7 @@ exports.updateUserPreferences = async (req, res) => {
         })
     }
 }
+
+// Future Additions
+// --- Toggle Notifications
+// --- Export Preferences
