@@ -204,3 +204,46 @@ exports.getAllDocuments = async (req, res) => {
         })
     }
 }
+
+// Controller to get single document by ID
+exports.getDocumentById = async (req, res) => {
+    try {
+        const userId = req.user.id // extracted from auth middleware
+        const documentId = req.params.id 
+
+        // If admin, they can fetch any document
+        const query = req.user.role === "admin" ? { _id: documentId } : { _id: documentId, userId }
+        const document = await GeneralDocuments
+        .findOne(query)
+        .populate("userId", "username email role");
+
+        if(!document) {
+            return res.status(404).json({
+                success: false,
+                message: "No Document found"
+            })
+        }
+
+        // Logging Action
+        await ActivityLog.create({
+            userId,
+            type: "DOCUMENT_FETCHED",
+            description: `User fetched document with ID ${documentId}`,
+            ipAddress: req.ip,
+            deviceInfo: req.headers["user-agent"],
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Document fetched successfully",
+            data: document
+        })
+        
+    } catch (error) {
+        console.error("Error while fetching a document by ID: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while fetching a particular document"
+        })
+    }
+}
