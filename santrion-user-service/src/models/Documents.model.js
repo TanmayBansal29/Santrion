@@ -30,7 +30,11 @@ const DocumentsSchema = mongoose.Schema({
     },
     isActive: {
         type: Boolean,
-        default: true
+        type: true
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
 }, {timestamps: true})
 

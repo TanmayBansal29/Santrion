@@ -238,12 +238,56 @@ exports.getDocumentById = async (req, res) => {
             message: "Document fetched successfully",
             data: document
         })
-        
+
     } catch (error) {
         console.error("Error while fetching a document by ID: ", error)
         return res.status(500).json({
             success: false,
             message: "Something went wrong while fetching a particular document"
+        })
+    }
+}
+
+// Controller to delete a document (Soft Delete)
+exports.deleteDocument = async (req, res) => {
+    try {
+        const userId = req.user.id // extracted from auth middleware
+        const documentId = req.params.id
+
+        // If admin, can soft delete any document
+        const query = req.user.role === "admin" ? { _id: documentId } : { _id: documentId, userId: userId }
+        const document = await GeneralDocuments.findOne(query);
+        if (!document) {
+          return res.status(404).json({
+            success: false,
+            message: "Document not found or you don't have permission to delete it",
+          });
+        }
+
+        // Perform soft delete
+        document.isDeleted = true;
+        document.isActive = false;
+        await document.save();
+        
+        // Logging Activity
+        await ActivityLog.create({
+            userId,
+            type: "DOCUMENT_DELETED",
+            description: `User deleted document with ID ${documentId}`,
+            ipAddress: req.ip,
+            deviceInfo: req.headers["user-agent"],
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "Document deleted successfully",
+        })
+
+    } catch (error) {
+        console.error("Error while deleting the document: ", error)
+        return res.status(500).json({
+            success: false,
+            message: "Something went wrong while deleting the document"
         })
     }
 }
